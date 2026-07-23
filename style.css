@@ -24,6 +24,14 @@ body {
 
 .setup.hidden { display: none; }
 
+.setup h2 { font-size: 1.3rem; }
+
+.setup-note {
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 0.5rem;
+}
+
 .setup input {
   padding: 0.6rem;
   border-radius: 6px;
@@ -45,9 +53,27 @@ body {
 
 .app.hidden { display: none; }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 h1 {
   font-size: 1.5rem;
-  text-align: center;
+}
+
+.reset-btn {
+  background: transparent;
+  color: #666;
+  padding: 0.4rem 0.7rem;
+  font-size: 1.2rem;
+  border-radius: 6px;
+}
+
+.reset-btn:hover {
+  background: #1a1a2a;
+  color: #eee;
 }
 
 /* ── Stats ── */

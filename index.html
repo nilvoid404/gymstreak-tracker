@@ -10,15 +10,31 @@
 
     <!-- Setup (first time only) -->
     <div class="setup" id="setup">
-      <h2>🔐 Enter App Password</h2>
-      <input type="password" id="passwordInput" placeholder="Your APP_PASSWORD" />
-      <button onclick="savePassword()">Save</button>
+      <h2>🔐 Setup</h2>
+      <p class="setup-note">One-time setup for this device</p>
+
+      <input
+        type="password"
+        id="tokenInput"
+        placeholder="Trigger Token (github_pat_...)"
+      />
+
+      <input
+        type="password"
+        id="passwordInput"
+        placeholder="APP_PASSWORD"
+      />
+
+      <button onclick="saveSetup()">Save</button>
     </div>
 
     <!-- Main App -->
-    <div class="app" id="app">
+    <div class="app hidden" id="app">
 
-      <h1>💪 GymStreak</h1>
+      <div class="header">
+        <h1>💪 GymStreak</h1>
+        <button class="reset-btn" onclick="resetApp()">⚙️</button>
+      </div>
 
       <!-- Stats -->
       <div class="stats">

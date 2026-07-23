@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────
-// Config — fill in your details
+// Config
 // ─────────────────────────────────────────
 
 const CONFIG = {
@@ -20,16 +20,17 @@ let stats = { currentStreak: 0, totalSessions: 0 };
 // ─────────────────────────────────────────
 
 const dom = {
-  setup:       document.getElementById("setup"),
-  app:         document.getElementById("app"),
+  setup:         document.getElementById("setup"),
+  app:           document.getElementById("app"),
+  tokenInput:    document.getElementById("tokenInput"),
   passwordInput: document.getElementById("passwordInput"),
-  streak:      document.getElementById("streak"),
-  total:       document.getElementById("total"),
-  workoutType: document.getElementById("workoutType"),
-  duration:    document.getElementById("duration"),
-  saveBtn:     document.getElementById("saveBtn"),
-  msg:         document.getElementById("msg"),
-  calendar:    document.getElementById("calendar"),
+  streak:        document.getElementById("streak"),
+  total:         document.getElementById("total"),
+  workoutType:   document.getElementById("workoutType"),
+  duration:      document.getElementById("duration"),
+  saveBtn:       document.getElementById("saveBtn"),
+  msg:           document.getElementById("msg"),
+  calendar:      document.getElementById("calendar"),
 };
 
 // ─────────────────────────────────────────
@@ -38,8 +39,9 @@ const dom = {
 
 function init() {
   const password = localStorage.getItem("gymstreak_password");
+  const token    = localStorage.getItem("gymstreak_trigger_token");
 
-  if (password) {
+  if (password && token) {
     dom.setup.classList.add("hidden");
     dom.app.classList.remove("hidden");
     loadData();
@@ -50,21 +52,53 @@ function init() {
 }
 
 // ─────────────────────────────────────────
-// Password
+// Setup — save token + password
 // ─────────────────────────────────────────
 
-function savePassword() {
-  const pw = dom.passwordInput.value.trim();
-  if (!pw) return;
+function saveSetup() {
+  const pw    = dom.passwordInput.value.trim();
+  const token = dom.tokenInput.value.trim();
+
+  if (!pw || !token) {
+    alert("Both fields are required");
+    return;
+  }
+
+  if (!token.startsWith("github_pat_")) {
+    alert("Token should start with github_pat_");
+    return;
+  }
 
   localStorage.setItem("gymstreak_password", pw);
+  localStorage.setItem("gymstreak_trigger_token", token);
+
   dom.setup.classList.add("hidden");
   dom.app.classList.remove("hidden");
   loadData();
 }
 
 // ─────────────────────────────────────────
-// Load data from Gist (public, no token)
+// Reset — clear everything and log out
+// ─────────────────────────────────────────
+
+function resetApp() {
+  const confirmed = confirm(
+    "Clear your saved token and password from this device?"
+  );
+
+  if (!confirmed) return;
+
+  localStorage.removeItem("gymstreak_password");
+  localStorage.removeItem("gymstreak_trigger_token");
+
+  dom.app.classList.add("hidden");
+  dom.setup.classList.remove("hidden");
+  dom.tokenInput.value = "";
+  dom.passwordInput.value = "";
+}
+
+// ─────────────────────────────────────────
+// Load data from Gist
 // ─────────────────────────────────────────
 
 async function loadData() {
@@ -83,7 +117,7 @@ async function loadData() {
     if (file && file.content) {
       const data = JSON.parse(file.content);
       sessions = data.sessions || {};
-      stats = data.stats || stats;
+      stats    = data.stats    || stats;
     }
 
     render();
@@ -100,21 +134,21 @@ async function loadData() {
 
 async function saveWorkout() {
   const workout = dom.workoutType.value;
+
   if (!workout) {
     setMsg("Pick a workout type", "err");
     return;
   }
 
-  const today = new Date().toISOString().split("T")[0];
+  const today    = new Date().toISOString().split("T")[0];
   const password = localStorage.getItem("gymstreak_password");
-  const token = localStorage.getItem("gymstreak_trigger_token");
+  const token    = localStorage.getItem("gymstreak_trigger_token");
 
   if (!token) {
-    setMsg("Trigger token missing. Check setup.", "err");
+    setMsg("Trigger token missing. Reset and re-setup.", "err");
     return;
   }
 
-  // Disable button while saving
   dom.saveBtn.disabled = true;
   setMsg("⏳ Sending to GitHub...", "wait");
 
@@ -143,17 +177,17 @@ async function saveWorkout() {
     );
 
     if (res.status === 204) {
-      setMsg("✅ Saved! Updating in ~20 seconds...", "ok");
+      setMsg("✅ Saved! Updating in ~25 seconds...", "ok");
 
-      // Optimistic update — show green immediately
+      // Optimistic update — show today green immediately
       sessions[today] = {
-        went: workout !== "Rest",
-        workout: workout,
+        went:     workout !== "Rest",
+        workout:  workout,
         duration: parseInt(dom.duration.value) || 0,
       };
       render();
 
-      // Reload actual data after Action finishes
+      // Reload real data after Action finishes
       setTimeout(() => loadData(), 25000);
     } else {
       const err = await res.json();
@@ -172,11 +206,8 @@ async function saveWorkout() {
 // ─────────────────────────────────────────
 
 function render() {
-  // Stats
   dom.streak.textContent = stats.currentStreak || 0;
   dom.total.textContent  = stats.totalSessions || 0;
-
-  // Calendar
   renderCalendar();
 }
 
@@ -186,7 +217,6 @@ function renderCalendar() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Start 364 days ago, align to Sunday
   const start = new Date(today);
   start.setDate(today.getDate() - 364);
   start.setDate(start.getDate() - start.getDay());
@@ -219,11 +249,12 @@ function renderCalendar() {
 
     if (isToday) div.classList.add("today");
 
-    // Simple title tooltip (native browser tooltip)
     if (!isFuture) {
       const session = sessions[dateStr];
       if (session) {
-        div.title = `${dateStr} — ${session.workout}${session.duration ? " (" + session.duration + "min)" : ""}`;
+        div.title = `${dateStr} — ${session.workout}${
+          session.duration ? " (" + session.duration + "min)" : ""
+        }`;
       } else {
         div.title = dateStr;
       }
