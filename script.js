@@ -15,22 +15,32 @@ const CONFIG = {
 let sessions = {};
 let stats = { currentStreak: 0, totalSessions: 0 };
 
+// Map workout type → CSS class
+const WORKOUT_CLASS = {
+  Push:   "push",
+  Pull:   "pull",
+  Legs:   "legs",
+  Cardio: "cardio",
+  Full:   "full",
+  Rest:   "rest",
+};
+
 // ─────────────────────────────────────────
 // DOM
 // ─────────────────────────────────────────
 
 const dom = {
-  setup:         document.getElementById("setup"),
-  app:           document.getElementById("app"),
-  tokenInput:    document.getElementById("tokenInput"),
-  passwordInput: document.getElementById("passwordInput"),
-  streak:        document.getElementById("streak"),
-  total:         document.getElementById("total"),
-  workoutType:   document.getElementById("workoutType"),
-  duration:      document.getElementById("duration"),
-  saveBtn:       document.getElementById("saveBtn"),
-  msg:           document.getElementById("msg"),
-  calendar:      document.getElementById("calendar"),
+  setup:           document.getElementById("setup"),
+  app:             document.getElementById("app"),
+  tokenInput:      document.getElementById("tokenInput"),
+  passwordInput:   document.getElementById("passwordInput"),
+  streak:          document.getElementById("streak"),
+  total:           document.getElementById("total"),
+  workoutType:     document.getElementById("workoutType"),
+  duration:        document.getElementById("duration"),
+  saveBtn:         document.getElementById("saveBtn"),
+  msg:             document.getElementById("msg"),
+  calendarSection: document.getElementById("calendarSection"),
 };
 
 // ─────────────────────────────────────────
@@ -52,7 +62,7 @@ function init() {
 }
 
 // ─────────────────────────────────────────
-// Setup — save token + password
+// Setup
 // ─────────────────────────────────────────
 
 function saveSetup() {
@@ -60,12 +70,7 @@ function saveSetup() {
   const token = dom.tokenInput.value.trim();
 
   if (!pw || !token) {
-    alert("Both fields are required");
-    return;
-  }
-
-  if (!token.startsWith("github_pat_")) {
-    alert("Token should start with github_pat_");
+    alert("Both fields required");
     return;
   }
 
@@ -78,15 +83,11 @@ function saveSetup() {
 }
 
 // ─────────────────────────────────────────
-// Reset — clear everything and log out
+// Reset
 // ─────────────────────────────────────────
 
 function resetApp() {
-  const confirmed = confirm(
-    "Clear your saved token and password from this device?"
-  );
-
-  if (!confirmed) return;
+  if (!confirm("Clear saved token and password from this device?")) return;
 
   localStorage.removeItem("gymstreak_password");
   localStorage.removeItem("gymstreak_trigger_token");
@@ -129,7 +130,7 @@ async function loadData() {
 }
 
 // ─────────────────────────────────────────
-// Save workout — triggers GitHub Action
+// Save workout
 // ─────────────────────────────────────────
 
 async function saveWorkout() {
@@ -145,7 +146,7 @@ async function saveWorkout() {
   const token    = localStorage.getItem("gymstreak_trigger_token");
 
   if (!token) {
-    setMsg("Trigger token missing. Reset and re-setup.", "err");
+    setMsg("Token missing. Reset and re-setup.", "err");
     return;
   }
 
@@ -179,7 +180,7 @@ async function saveWorkout() {
     if (res.status === 204) {
       setMsg("✅ Saved! Updating in ~25 seconds...", "ok");
 
-      // Optimistic update — show today green immediately
+      // Optimistic update — instant color change
       sessions[today] = {
         went:     workout !== "Rest",
         workout:  workout,
@@ -187,7 +188,6 @@ async function saveWorkout() {
       };
       render();
 
-      // Reload real data after Action finishes
       setTimeout(() => loadData(), 25000);
     } else {
       const err = await res.json();
@@ -211,56 +211,98 @@ function render() {
   renderCalendar();
 }
 
+// ─────────────────────────────────────────
+// Month-based calendar
+// Shows current year January through December
+// ─────────────────────────────────────────
+
 function renderCalendar() {
-  dom.calendar.innerHTML = "";
+  dom.calendarSection.innerHTML = "";
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const currentYear = today.getFullYear();
 
-  const start = new Date(today);
-  start.setDate(today.getDate() - 364);
-  start.setDate(start.getDate() - start.getDay());
+  const monthNames = [
+    "January", "February", "March", "April",
+    "May", "June", "July", "August",
+    "September", "October", "November", "December"
+  ];
 
-  for (let i = 0; i < 371; i++) {
-    const date = new Date(start);
-    date.setDate(start.getDate() + i);
-    date.setHours(0, 0, 0, 0);
+  const weekdays = ["S", "M", "T", "W", "T", "F", "S"];
 
-    const dateStr  = date.toISOString().split("T")[0];
-    const isToday  = date.getTime() === today.getTime();
-    const isFuture = date > today;
+  // Build each month block
+  for (let m = 0; m < 12; m++) {
+    const monthBlock = document.createElement("div");
+    monthBlock.className = "month-block";
 
-    const div = document.createElement("div");
-    div.classList.add("day");
+    // Month title
+    const title = document.createElement("div");
+    title.className = "month-title";
+    title.textContent = `${monthNames[m]} ${currentYear}`;
+    monthBlock.appendChild(title);
 
-    if (isFuture) {
-      div.classList.add("future");
-    } else {
-      const session = sessions[dateStr];
+    // Grid container
+    const grid = document.createElement("div");
+    grid.className = "month-grid";
 
-      if (session) {
-        if (session.workout === "Rest") {
-          div.classList.add("rest");
-        } else if (session.went) {
-          div.classList.add("green");
-        }
-      }
+    // Weekday headers
+    weekdays.forEach((wd) => {
+      const wdEl = document.createElement("div");
+      wdEl.className = "weekday";
+      wdEl.textContent = wd;
+      grid.appendChild(wdEl);
+    });
+
+    // Get first day of month and days in month
+    const firstDay    = new Date(currentYear, m, 1);
+    const firstWeekday = firstDay.getDay();
+    const daysInMonth = new Date(currentYear, m + 1, 0).getDate();
+
+    // Empty cells before first day
+    for (let i = 0; i < firstWeekday; i++) {
+      const empty = document.createElement("div");
+      empty.className = "day empty";
+      grid.appendChild(empty);
     }
 
-    if (isToday) div.classList.add("today");
+    // Day cells
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(currentYear, m, d);
+      date.setHours(0, 0, 0, 0);
 
-    if (!isFuture) {
+      const dateStr  = date.toISOString().split("T")[0];
+      const isToday  = date.getTime() === today.getTime();
+      const isFuture = date > today;
+
+      const dayEl = document.createElement("div");
+      dayEl.className = "day";
+      dayEl.textContent = d;
+
+      // Apply workout color if session exists
       const session = sessions[dateStr];
+      if (session && session.workout) {
+        const cls = WORKOUT_CLASS[session.workout];
+        if (cls) dayEl.classList.add(cls);
+      }
+
+      if (isFuture) dayEl.classList.add("future");
+      if (isToday)  dayEl.classList.add("today");
+
+      // Tooltip
       if (session) {
-        div.title = `${dateStr} — ${session.workout}${
+        dayEl.title = `${dateStr} — ${session.workout}${
           session.duration ? " (" + session.duration + "min)" : ""
         }`;
       } else {
-        div.title = dateStr;
+        dayEl.title = dateStr;
       }
+
+      grid.appendChild(dayEl);
     }
 
-    dom.calendar.appendChild(div);
+    monthBlock.appendChild(grid);
+    dom.calendarSection.appendChild(monthBlock);
   }
 }
 

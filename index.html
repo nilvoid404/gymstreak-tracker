@@ -11,18 +11,17 @@
     <!-- Setup (first time only) -->
     <div class="setup" id="setup">
       <h2>🔐 Setup</h2>
-      <p class="setup-note">One-time setup for this device</p>
 
       <input
         type="password"
         id="tokenInput"
-        placeholder="Trigger Token (github_pat_...)"
+        placeholder="Trigger Token"
       />
 
       <input
         type="password"
         id="passwordInput"
-        placeholder="APP_PASSWORD"
+        placeholder="Password"
       />
 
       <button onclick="saveSetup()">Save</button>
@@ -52,12 +51,12 @@
       <div class="log-section">
         <select id="workoutType">
           <option value="">-- Select Workout --</option>
-          <option value="Push">🏋️ Push</option>
-          <option value="Pull">💪 Pull</option>
-          <option value="Legs">🦵 Legs</option>
-          <option value="Cardio">🏃 Cardio</option>
+          <option value="Push">Push Day</option>
+          <option value="Pull">Pull Day</option>
+          <option value="Legs">Legs Day</option>
+          <option value="Cardio">Cardio</option>
           <option value="Full">⚡ Full Body</option>
-          <option value="Rest">😴 Rest Day</option>
+          <option value="Rest">Rest Day</option>
         </select>
 
         <input
@@ -75,11 +74,18 @@
         <p class="msg" id="msg"></p>
       </div>
 
-      <!-- 365 Day Calendar -->
-      <div class="calendar-section">
-        <h2>365 Days</h2>
-        <div class="calendar" id="calendar"></div>
+      <!-- Legend -->
+      <div class="legend">
+        <span><i class="dot push"></i> Push</span>
+        <span><i class="dot pull"></i> Pull</span>
+        <span><i class="dot legs"></i> Legs</span>
+        <span><i class="dot cardio"></i> Cardio</span>
+        <span><i class="dot full"></i> Full</span>
+        <span><i class="dot rest"></i> Rest</span>
       </div>
+
+      <!-- Month-based Calendar -->
+      <div class="calendar-section" id="calendarSection"></div>
 
     </div>
 
