@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GymStreak</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+
+    <!-- Setup (first time only) -->
+    <div class="setup" id="setup">
+      <h2>🔐 Enter App Password</h2>
+      <input type="password" id="passwordInput" placeholder="Your APP_PASSWORD" />
+      <button onclick="savePassword()">Save</button>
+    </div>
+
+    <!-- Main App -->
+    <div class="app" id="app">
+
+      <h1>💪 GymStreak</h1>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-num" id="streak">0</span>
+          <span>day streak</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num" id="total">0</span>
+          <span>total sessions</span>
+        </div>
+      </div>
+
+      <!-- Log Workout -->
+      <div class="log-section">
+        <select id="workoutType">
+          <option value="">-- Select Workout --</option>
+          <option value="Push">🏋️ Push</option>
+          <option value="Pull">💪 Pull</option>
+          <option value="Legs">🦵 Legs</option>
+          <option value="Cardio">🏃 Cardio</option>
+          <option value="Full">⚡ Full Body</option>
+          <option value="Rest">😴 Rest Day</option>
+        </select>
+
+        <input
+          type="number"
+          id="duration"
+          placeholder="Minutes (e.g. 60)"
+          min="0"
+          max="300"
+        />
+
+        <button id="saveBtn" onclick="saveWorkout()">
+          Save Today's Workout
+        </button>
+
+        <p class="msg" id="msg"></p>
+      </div>
+
+      <!-- 365 Day Calendar -->
+      <div class="calendar-section">
+        <h2>365 Days</h2>
+        <div class="calendar" id="calendar"></div>
+      </div>
+
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

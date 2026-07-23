@@ -1,0 +1,14 @@
+# Never commit these accidentally
+.env
+.env.local
+.env.production
+
+# Mac junk
+.DS_Store
+
+# Editor folders
+.vscode/
+.idea/
+
+# Just in case
+node_modules/
