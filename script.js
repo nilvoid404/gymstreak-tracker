@@ -114,11 +114,22 @@ async function loadData() {
   setMsg("Loading...", "wait");
 
   try {
+    const token = localStorage.getItem("gymstreak_trigger_token");
+
+    const headers = {
+      Accept: "application/vnd.github+json",
+    };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
     const res = await fetch(
-      `https://api.github.com/gists/${CONFIG.gistId}`
+      `https://api.github.com/gists/${CONFIG.gistId}`,
+      { headers }
     );
 
-    if (!res.ok) throw new Error("Gist fetch failed");
+    if (!res.ok) throw new Error(`Gist fetch failed: ${res.status}`);
 
     const gist = await res.json();
     const file = gist.files["gym-data.json"];
