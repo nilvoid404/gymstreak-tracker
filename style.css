@@ -12,7 +12,7 @@ body {
   padding: 2rem 1rem;
 }
 
-/* ── Setup Screen ── */
+/* Setup */
 .setup {
   max-width: 350px;
   margin: 4rem auto;
@@ -35,7 +35,7 @@ body {
   text-align: center;
 }
 
-/* ── App ── */
+/* App */
 .app {
   max-width: 800px;
   margin: 0 auto;
@@ -67,7 +67,7 @@ h1 { font-size: 1.5rem; }
   color: #eee;
 }
 
-/* ── Stats ── */
+/* Stats */
 .stats {
   display: flex;
   justify-content: center;
@@ -92,7 +92,7 @@ h1 { font-size: 1.5rem; }
   color: #888;
 }
 
-/* ── Log Section ── */
+/* Log Section */
 .log-section {
   display: flex;
   flex-direction: column;
@@ -138,7 +138,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .msg.err  { color: #ef4444; }
 .msg.wait { color: #eab308; }
 
-/* ── Legend ── */
+/* Legend */
 .legend {
   display: flex;
   justify-content: center;
@@ -161,15 +161,14 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   display: inline-block;
 }
 
-/* Workout Colors */
-.dot.push   { background: #ef4444; } /* red */
-.dot.pull   { background: #3b82f6; } /* blue */
-.dot.legs   { background: #f97316; } /* orange */
-.dot.cardio { background: #eab308; } /* yellow */
-.dot.full   { background: #a855f7; } /* purple */
-.dot.rest   { background: #6b7280; } /* gray */
+.dot.push   { background: #ef4444; }
+.dot.pull   { background: #3b82f6; }
+.dot.legs   { background: #f97316; }
+.dot.cardio { background: #eab308; }
+.dot.full   { background: #a855f7; }
+.dot.rest   { background: #6b7280; }
 
-/* ── Calendar (Month-based) ── */
+/* Calendar */
 .calendar-section {
   display: flex;
   flex-direction: column;
@@ -220,7 +219,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .day.empty { background: transparent; }
 
-/* Workout Colors on Days */
+/* Workout Colors */
 .day.push   { background: #ef4444; color: #fff; font-weight: 600; }
 .day.pull   { background: #3b82f6; color: #fff; font-weight: 600; }
 .day.legs   { background: #f97316; color: #fff; font-weight: 600; }
@@ -228,7 +227,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .day.full   { background: #a855f7; color: #fff; font-weight: 600; }
 .day.rest   { background: #6b7280; color: #fff; font-weight: 600; opacity: 0.7; }
 
-/* Today marker — small dot instead of outline */
+/* Today */
 .day.today {
   border: 2px solid #fff;
 }
@@ -237,7 +236,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   color: #333;
 }
 
-/* ── Responsive ── */
+/* Responsive */
 @media (max-width: 500px) {
   body { padding: 1rem 0.5rem; }
   .stats { gap: 2rem; }

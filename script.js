@@ -25,6 +25,14 @@ const WORKOUT_CLASS = {
   Rest:   "rest",
 };
 
+// Get date as YYYY-MM-DD in LOCAL timezone (not UTC)
+function getLocalDateStr(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 // ─────────────────────────────────────────
 // DOM
 // ─────────────────────────────────────────
@@ -141,7 +149,7 @@ async function saveWorkout() {
     return;
   }
 
-  const today    = new Date().toISOString().split("T")[0];
+  const today    = getLocalDateStr(new Date());
   const password = localStorage.getItem("gymstreak_password");
   const token    = localStorage.getItem("gymstreak_trigger_token");
 
@@ -180,7 +188,7 @@ async function saveWorkout() {
     if (res.status === 204) {
       setMsg("✅ Saved! Updating in ~25 seconds...", "ok");
 
-      // Optimistic update — instant color change
+      // Optimistic update
       sessions[today] = {
         went:     workout !== "Rest",
         workout:  workout,
@@ -202,7 +210,7 @@ async function saveWorkout() {
 }
 
 // ─────────────────────────────────────────
-// Render stats + calendar
+// Render
 // ─────────────────────────────────────────
 
 function render() {
@@ -212,8 +220,7 @@ function render() {
 }
 
 // ─────────────────────────────────────────
-// Month-based calendar
-// Shows current year January through December
+// Calendar — from current month to Dec 2027
 // ─────────────────────────────────────────
 
 function renderCalendar() {
@@ -221,7 +228,9 @@ function renderCalendar() {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const currentYear = today.getFullYear();
+
+  const currentYear  = today.getFullYear();
+  const currentMonth = today.getMonth();
 
   const monthNames = [
     "January", "February", "March", "April",
@@ -231,15 +240,30 @@ function renderCalendar() {
 
   const weekdays = ["S", "M", "T", "W", "T", "F", "S"];
 
-  // Build each month block
-  for (let m = 0; m < 12; m++) {
+  // Build list of months from THIS month to December 2027
+  const monthsToShow = [];
+
+  let year  = currentYear;
+  let month = currentMonth;
+
+  while (year < 2028) {
+    monthsToShow.push({ year, month });
+    month++;
+    if (month > 11) {
+      month = 0;
+      year++;
+    }
+  }
+
+  // Render each month block
+  monthsToShow.forEach(({ year, month }) => {
     const monthBlock = document.createElement("div");
     monthBlock.className = "month-block";
 
     // Month title
     const title = document.createElement("div");
     title.className = "month-title";
-    title.textContent = `${monthNames[m]} ${currentYear}`;
+    title.textContent = `${monthNames[month]} ${year}`;
     monthBlock.appendChild(title);
 
     // Grid container
@@ -254,10 +278,9 @@ function renderCalendar() {
       grid.appendChild(wdEl);
     });
 
-    // Get first day of month and days in month
-    const firstDay    = new Date(currentYear, m, 1);
+    const firstDay     = new Date(year, month, 1);
     const firstWeekday = firstDay.getDay();
-    const daysInMonth = new Date(currentYear, m + 1, 0).getDate();
+    const daysInMonth  = new Date(year, month + 1, 0).getDate();
 
     // Empty cells before first day
     for (let i = 0; i < firstWeekday; i++) {
@@ -268,12 +291,13 @@ function renderCalendar() {
 
     // Day cells
     for (let d = 1; d <= daysInMonth; d++) {
-      const date = new Date(currentYear, m, d);
+      const date = new Date(year, month, d);
       date.setHours(0, 0, 0, 0);
 
-      const dateStr  = date.toISOString().split("T")[0];
-      const isToday  = date.getTime() === today.getTime();
-      const isFuture = date > today;
+      const dateStr    = getLocalDateStr(date);
+      const isToday    = date.getTime() === today.getTime();
+      const isFuture   = date > today;
+      const isSaturday = date.getDay() === 6;
 
       const dayEl = document.createElement("div");
       dayEl.className = "day";
@@ -284,6 +308,9 @@ function renderCalendar() {
       if (session && session.workout) {
         const cls = WORKOUT_CLASS[session.workout];
         if (cls) dayEl.classList.add(cls);
+      } else if (isSaturday && !isFuture) {
+        // Auto rest color on Saturdays (past ones)
+        dayEl.classList.add("rest");
       }
 
       if (isFuture) dayEl.classList.add("future");
@@ -294,6 +321,8 @@ function renderCalendar() {
         dayEl.title = `${dateStr} — ${session.workout}${
           session.duration ? " (" + session.duration + "min)" : ""
         }`;
+      } else if (isSaturday) {
+        dayEl.title = `${dateStr} — Rest Day (auto)`;
       } else {
         dayEl.title = dateStr;
       }
@@ -303,7 +332,7 @@ function renderCalendar() {
 
     monthBlock.appendChild(grid);
     dom.calendarSection.appendChild(monthBlock);
-  }
+  });
 }
 
 // ─────────────────────────────────────────

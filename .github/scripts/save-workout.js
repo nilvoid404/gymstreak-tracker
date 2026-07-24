@@ -10,11 +10,10 @@ const fs = require("fs");
 const path = require("path");
 
 // Pull everything from environment
-// GitHub Actions injects secrets here
 const {
   GH_TOKEN,
   GIST_ID,
-  GITHUB_USERNAME,
+  GH_USERNAME,
   WORKOUT_DATE,
   WORKOUT_TYPE,
   WORKOUT_DURATION,
@@ -23,38 +22,36 @@ const {
 } = process.env;
 
 // ─────────────────────────────────────────────
-// Simple HTTPS request helper
-// No axios needed, use built-in https
+// Local date helper (Nepal timezone safe)
+// ─────────────────────────────────────────────
+
+function getLocalDateStr(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+// ─────────────────────────────────────────────
+// HTTPS request helper
 // ─────────────────────────────────────────────
 
 function request(options, body = null) {
   return new Promise((resolve, reject) => {
     const req = https.request(options, (res) => {
       let data = "";
-
-      res.on("data", (chunk) => {
-        data += chunk;
-      });
-
+      res.on("data", (chunk) => (data += chunk));
       res.on("end", () => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(JSON.parse(data || "{}"));
         } else {
-          reject(
-            new Error(
-              `HTTP ${res.statusCode}: ${data}`
-            )
-          );
+          reject(new Error(`HTTP ${res.statusCode}: ${data}`));
         }
       });
     });
 
     req.on("error", reject);
-
-    if (body) {
-      req.write(JSON.stringify(body));
-    }
-
+    if (body) req.write(JSON.stringify(body));
     req.end();
   });
 }
@@ -75,7 +72,7 @@ function githubHeaders(extraHeaders = {}) {
 }
 
 // ─────────────────────────────────────────────
-// Read current gym data from Gist
+// Read gym data from Gist
 // ─────────────────────────────────────────────
 
 async function readGistData() {
@@ -108,7 +105,7 @@ async function readGistData() {
 }
 
 // ─────────────────────────────────────────────
-// Write updated gym data back to Gist
+// Write gym data to Gist
 // ─────────────────────────────────────────────
 
 async function writeGistData(gymData) {
@@ -135,16 +132,19 @@ async function writeGistData(gymData) {
 }
 
 // ─────────────────────────────────────────────
-// Calculate streaks and stats
+// Calculate stats (includes Rest days in streak)
 // ─────────────────────────────────────────────
 
 function calculateStats(sessions) {
-  // Only count real gym days, not rest days
+  // Count any logged day (gym or rest) for streak
+  const allDates = Object.keys(sessions).sort();
+
+  // Only count gym days for totalSessions
   const gymDates = Object.keys(sessions)
     .filter((date) => sessions[date].went === true)
     .sort();
 
-  if (gymDates.length === 0) {
+  if (allDates.length === 0) {
     return {
       totalSessions: 0,
       currentStreak: 0,
@@ -159,35 +159,34 @@ function calculateStats(sessions) {
     return sum + (parseInt(sessions[date].duration) || 0);
   }, 0);
 
-  // ── Current streak ──
-  // Count consecutive days backwards from today
+  // Current streak — count backwards from today
+  // Both gym days AND rest days keep the streak alive
   let currentStreak = 0;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  for (let i = 0; i <= 365; i++) {
+  for (let i = 0; i <= 730; i++) {
     const checkDate = new Date(today);
     checkDate.setDate(today.getDate() - i);
-    const dateStr = checkDate.toISOString().split("T")[0];
+    const dateStr = getLocalDateStr(checkDate);
 
-    if (sessions[dateStr] && sessions[dateStr].went === true) {
+    if (sessions[dateStr]) {
       currentStreak++;
     } else if (i > 0) {
       break;
     }
   }
 
-  // ── Longest streak ──
+  // Longest streak — includes rest days
   let longestStreak = 0;
   let tempStreak = 0;
   let prevDate = null;
 
-  for (const date of gymDates) {
+  for (const date of allDates) {
     if (prevDate) {
       const prev = new Date(prevDate);
       const curr = new Date(date);
-      const diffDays =
-        (curr - prev) / (1000 * 60 * 60 * 24);
+      const diffDays = (curr - prev) / (1000 * 60 * 60 * 24);
 
       if (diffDays === 1) {
         tempStreak++;
@@ -211,9 +210,7 @@ function calculateStats(sessions) {
 }
 
 // ─────────────────────────────────────────────
-// Create session markdown file in repo
-// This is what gets committed and shows up
-// on your GitHub contribution graph
+// Create session file
 // ─────────────────────────────────────────────
 
 function createSessionFile(sessionData) {
@@ -223,9 +220,7 @@ function createSessionFile(sessionData) {
   const year = dateObj.getFullYear();
   const month = dateObj.toLocaleString("en-US", { month: "long" });
   const day = dateObj.getDate();
-  const weekday = dateObj.toLocaleString("en-US", {
-    weekday: "long",
-  });
+  const weekday = dateObj.toLocaleString("en-US", { weekday: "long" });
 
   const workoutEmoji = {
     Push: "🏋️",
@@ -234,14 +229,12 @@ function createSessionFile(sessionData) {
     Cardio: "🏃",
     Full: "⚡",
     Rest: "😴",
-    Other: "🔥",
   };
 
   const emoji = workoutEmoji[workout] || "💪";
 
-  // Build intensity bar visual
-  const filled = "█".repeat(parseInt(intensity) || 5);
-  const empty = "░".repeat(10 - (parseInt(intensity) || 5));
+  const filled = "█".repeat(parseInt(intensity) || 0);
+  const empty = "░".repeat(10 - (parseInt(intensity) || 0));
   const intensityBar = filled + empty;
 
   const content = `# ${emoji} ${workout} Day — ${month} ${day}, ${year}
@@ -257,23 +250,16 @@ function createSessionFile(sessionData) {
 
 ## Notes
 
-${notes || "No notes logged for this session."}
+${notes || "No notes logged."}
 
 ---
 
 *Auto-logged by GymStreak Tracker*
 `;
 
-  // Create folder structure
-  const folderPath = path.join(
-    "gym-sessions",
-    String(year),
-    month
-  );
-
+  const folderPath = path.join("gym-sessions", String(year), month);
   fs.mkdirSync(folderPath, { recursive: true });
 
-  // Write the file
   const filePath = path.join(folderPath, `${date}.md`);
   fs.writeFileSync(filePath, content, "utf8");
 
@@ -281,7 +267,7 @@ ${notes || "No notes logged for this session."}
 }
 
 // ─────────────────────────────────────────────
-// Update README with latest stats
+// Update README with stats
 // ─────────────────────────────────────────────
 
 function updateReadme(stats) {
@@ -338,7 +324,7 @@ gym-sessions/
 }
 
 // ─────────────────────────────────────────────
-// Main — runs everything in order
+// Main
 // ─────────────────────────────────────────────
 
 async function main() {
@@ -348,14 +334,12 @@ async function main() {
   console.log(`⏱️ Duration: ${WORKOUT_DURATION} minutes`);
   console.log("─────────────────────────────────");
 
-  // 1. Read existing data
   const gymData = await readGistData();
 
   if (!gymData.sessions) {
     gymData.sessions = {};
   }
 
-  // 2. Add today's session
   gymData.sessions[WORKOUT_DATE] = {
     went: WORKOUT_TYPE !== "Rest",
     workout: WORKOUT_TYPE,
@@ -365,42 +349,30 @@ async function main() {
     loggedAt: new Date().toISOString(),
   };
 
-  // 3. Recalculate stats
   gymData.stats = calculateStats(gymData.sessions);
   gymData.lastUpdated = new Date().toISOString();
 
-  // 4. Save updated data to Gist
   await writeGistData(gymData);
 
-  // 5. Create session file in repo (for the commit)
-  if (WORKOUT_TYPE !== "Rest") {
-    createSessionFile({
-      date: WORKOUT_DATE,
-      workout: WORKOUT_TYPE,
-      duration: WORKOUT_DURATION,
-      intensity: WORKOUT_INTENSITY,
-      notes: WORKOUT_NOTES,
-    });
-  }
+  createSessionFile({
+    date: WORKOUT_DATE,
+    workout: WORKOUT_TYPE,
+    duration: WORKOUT_DURATION,
+    intensity: WORKOUT_INTENSITY,
+    notes: WORKOUT_NOTES,
+  });
 
-  // 6. Update README with new stats
   updateReadme(gymData.stats);
 
   console.log("─────────────────────────────────");
   console.log("✅ All done!");
-  console.log(
-    `🔥 Current streak: ${gymData.stats.currentStreak} days`
-  );
-  console.log(
-    `🏆 Longest streak: ${gymData.stats.longestStreak} days`
-  );
-  console.log(
-    `📅 Total sessions: ${gymData.stats.totalSessions}`
-  );
+  console.log(`🔥 Current streak: ${gymData.stats.currentStreak} days`);
+  console.log(`🏆 Longest streak: ${gymData.stats.longestStreak} days`);
+  console.log(`📅 Total sessions: ${gymData.stats.totalSessions}`);
   console.log("─────────────────────────────────");
 }
 
 main().catch((err) => {
-  console.error("❌ Script failed:", err.message);
+  console.error("Script failed:", err.message);
   process.exit(1);
 });

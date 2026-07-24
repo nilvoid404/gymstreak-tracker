@@ -1,0 +1,51 @@
+name: Saturday Rest Day
+
+on:
+  schedule:
+    - cron: "15 12 * * 6"
+
+  workflow_dispatch:
+
+jobs:
+  saturday-rest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Log rest day
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GIST_ID: ${{ secrets.GIST_ID }}
+          GH_USERNAME: ${{ secrets.GH_USERNAME }}
+          WORKOUT_TYPE: "Rest"
+          WORKOUT_DURATION: "0"
+          WORKOUT_INTENSITY: "0"
+          WORKOUT_NOTES: "Auto-logged Saturday rest day"
+        run: |
+          export WORKOUT_DATE=$(TZ='Asia/Kathmandu' date +%Y-%m-%d)
+          echo "Nepal date: $WORKOUT_DATE"
+          node .github/scripts/save-workout.js
+
+      - name: Commit rest day
+        run: |
+          git config user.name "nilvoid404"
+          git config user.email "258736692+nilvoid404@users.noreply.github.com"
+
+          git add .
+
+          if git diff --staged --quiet; then
+            echo "No changes"
+          else
+            NEPAL_DATE=$(TZ='Asia/Kathmandu' date +%Y-%m-%d)
+            git commit -m "😴 Rest day — $NEPAL_DATE"
+            git push
+          fi

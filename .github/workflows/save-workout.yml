@@ -1,7 +1,5 @@
 name: Save Gym Workout
 
-# This workflow triggers when your frontend
-# sends a repository_dispatch event
 on:
   repository_dispatch:
     types: [gym-checkin]
@@ -11,45 +9,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ─────────────────────────────────────────
-      # Step 1 — Verify the password
-      # Rejects fake requests immediately
-      # ─────────────────────────────────────────
+      # Step 1 — Verify password
       - name: Verify password
         run: |
           if [ "${{ github.event.client_payload.password }}" != "${{ secrets.APP_PASSWORD }}" ]; then
-            echo "❌ Wrong password — rejecting request"
+            echo "Wrong password — rejecting request"
             exit 1
           fi
-          echo "✅ Password verified"
+          echo "Password Verified!"
 
-      # ─────────────────────────────────────────
-      # Step 2 — Checkout your repo
-      # So we can create/update files in it
-      # ─────────────────────────────────────────
+      # Step 2 — Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN }}
 
-      # ─────────────────────────────────────────
-      # Step 3 — Set up Node.js
-      # We use a small script to handle Gist
-      # ─────────────────────────────────────────
+      # Step 3 — Setup Node
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      # ─────────────────────────────────────────
-      # Step 4 — Save workout data to Gist
-      # and create session file in repo
-      # ─────────────────────────────────────────
+      # Step 4 — Save workout data
       - name: Save workout
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GIST_ID: ${{ secrets.GIST_ID }}
-          GITHUB_USERNAME: ${{ secrets.GITHUB_USERNAME }}
+          GH_USERNAME: ${{ secrets.GH_USERNAME }}
           WORKOUT_DATE: ${{ github.event.client_payload.date }}
           WORKOUT_TYPE: ${{ github.event.client_payload.workout }}
           WORKOUT_DURATION: ${{ github.event.client_payload.duration }}
@@ -57,18 +43,14 @@ jobs:
           WORKOUT_NOTES: ${{ github.event.client_payload.notes }}
         run: node .github/scripts/save-workout.js
 
-      # ─────────────────────────────────────────
-      # Step 5 — Commit the session file to repo
-      # This creates the GitHub contribution
-      # ─────────────────────────────────────────
+      # Step 5 — Commit to repo (from YOUR account)
       - name: Commit session to repo
         run: |
-          git config user.name "GymStreak Tracker"
-          git config user.email "gymstreak@noreply.github.com"
+          git config user.name "nilvoid404"
+          git config user.email "258736692+nilvoid404@users.noreply.github.com"
 
           git add .
 
-          # Only commit if there are actual changes
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
