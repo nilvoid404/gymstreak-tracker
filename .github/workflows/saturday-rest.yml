@@ -1,9 +1,11 @@
 name: Saturday Rest Day
 
+permissions:
+  contents: write
+
 on:
   schedule:
     - cron: "15 12 * * 6"
-
   workflow_dispatch:
 
 jobs:
@@ -15,6 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN }}
+          persist-credentials: false
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -36,6 +39,8 @@ jobs:
           node .github/scripts/save-workout.js
 
       - name: Commit rest day
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           git config user.name "nilvoid404"
           git config user.email "258736692+nilvoid404@users.noreply.github.com"
@@ -47,5 +52,7 @@ jobs:
           else
             NEPAL_DATE=$(TZ='Asia/Kathmandu' date +%Y-%m-%d)
             git commit -m "😴 Rest day — $NEPAL_DATE"
-            git push
+
+            # Push using GH_TOKEN with authenticated URL
+            git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
           fi

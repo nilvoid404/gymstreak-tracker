@@ -1,5 +1,8 @@
 name: Save Gym Workout
 
+permissions:
+  contents: write
+
 on:
   repository_dispatch:
     types: [gym-checkin]
@@ -23,6 +26,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN }}
+          persist-credentials: false
 
       # Step 3 — Setup Node
       - name: Setup Node.js
@@ -43,8 +47,10 @@ jobs:
           WORKOUT_NOTES: ${{ github.event.client_payload.notes }}
         run: node .github/scripts/save-workout.js
 
-      # Step 5 — Commit to repo (from YOUR account)
+      # Step 5 — Commit to repo using GH_TOKEN explicitly
       - name: Commit session to repo
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           git config user.name "nilvoid404"
           git config user.email "258736692+nilvoid404@users.noreply.github.com"
@@ -65,6 +71,9 @@ jobs:
             if [ "$TYPE" = "Rest" ]; then EMOJI="😴"; fi
 
             git commit -m "$EMOJI Gym session — $TYPE — ${{ github.event.client_payload.duration }}min — ${{ github.event.client_payload.date }}"
-            git push
+
+            # Push using GH_TOKEN with authenticated URL
+            git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
+
             echo "✅ Committed to repo"
           fi
