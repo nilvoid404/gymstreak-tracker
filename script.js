@@ -222,7 +222,7 @@ async function saveWorkout() {
   }
 
   dom.saveBtn.disabled = true;
-  setMsg("⏳ Sending to GitHub...", "wait");
+
 
   try {
     const res = await fetch(
