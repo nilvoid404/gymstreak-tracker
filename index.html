@@ -10,7 +10,7 @@
 
     <!-- Setup -->
     <div class="setup" id="setup">
-      <h2>🔐 Login Page</h2>
+      <h2>🔐 Setup</h2>
       <input type="password" id="tokenInput" placeholder="Trigger Token" />
       <input type="password" id="passwordInput" placeholder="Password" />
       <button onclick="saveSetup()">Save</button>
@@ -28,7 +28,7 @@
       <div class="stats">
         <div class="stat">
           <span class="stat-num" id="streak">0</span>
-          <span>daily streak</span>
+          <span>day streak</span>
         </div>
         <div class="stat">
           <span class="stat-num" id="total">0</span>
@@ -43,7 +43,7 @@
           <option value="Push">Push Day</option>
           <option value="Pull">Pull Day</option>
           <option value="Legs">Legs Day</option>
-          <option value="Cardio">Cardio</option>
+          <option value="Abs">Abs Day</option>
           <option value="Full">Full Body</option>
           <option value="Rest">Rest Day</option>
         </select>
@@ -63,15 +63,18 @@
         <p class="msg" id="msg"></p>
       </div>
 
-      <!-- Legend -->
-      <div class="legend">
-        <span><i class="dot push"></i> Push Day</span>
-        <span><i class="dot pull"></i> Pull Day</span>
-        <span><i class="dot legs"></i> Legs</span>
-        <span><i class="dot cardio"></i> Cardio</span>
-        <span><i class="dot full"></i> Full Body</span>
-        <span><i class="dot rest"></i> Rest Day</span>
+      <!-- Mode Toggle -->
+      <div class="mode-toggle">
+        <button class="mode-btn active" data-mode="simple" onclick="switchMode('simple')">
+          🔵 Simple
+        </button>
+        <button class="mode-btn" data-mode="detailed" onclick="switchMode('detailed')">
+          🎨 Detailed
+        </button>
       </div>
+
+      <!-- Legend — changes based on mode -->
+      <div class="legend" id="legend"></div>
 
       <!-- Calendar -->
       <div class="calendar-section" id="calendarSection"></div>

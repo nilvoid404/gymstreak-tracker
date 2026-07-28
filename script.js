@@ -14,18 +14,18 @@ const CONFIG = {
 
 let sessions = {};
 let stats = { currentStreak: 0, totalSessions: 0 };
+let currentMode = "simple"; // "simple" or "detailed"
 
-// Map workout type → CSS class
 const WORKOUT_CLASS = {
   Push:   "push",
   Pull:   "pull",
   Legs:   "legs",
-  Cardio: "cardio",
+  Abs: "Abs",
   Full:   "full",
   Rest:   "rest",
 };
 
-// Get date as YYYY-MM-DD in LOCAL timezone (not UTC)
+// Get date as YYYY-MM-DD in LOCAL timezone
 function getLocalDateStr(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -49,6 +49,7 @@ const dom = {
   saveBtn:         document.getElementById("saveBtn"),
   msg:             document.getElementById("msg"),
   calendarSection: document.getElementById("calendarSection"),
+  legend:          document.getElementById("legend"),
 };
 
 // ─────────────────────────────────────────
@@ -56,6 +57,11 @@ const dom = {
 // ─────────────────────────────────────────
 
 function init() {
+  // Load saved mode preference
+  const savedMode = localStorage.getItem("gymstreak_mode") || "simple";
+  currentMode = savedMode;
+  applyMode();
+
   const password = localStorage.getItem("gymstreak_password");
   const token    = localStorage.getItem("gymstreak_trigger_token");
 
@@ -66,6 +72,52 @@ function init() {
   } else {
     dom.setup.classList.remove("hidden");
     dom.app.classList.add("hidden");
+  }
+}
+
+// ─────────────────────────────────────────
+// Mode switching
+// ─────────────────────────────────────────
+
+function switchMode(mode) {
+  currentMode = mode;
+  localStorage.setItem("gymstreak_mode", mode);
+  applyMode();
+  renderLegend();
+}
+
+function applyMode() {
+  // Toggle body class
+  document.body.classList.remove("mode-simple", "mode-detailed");
+  document.body.classList.add(`mode-${currentMode}`);
+
+  // Toggle active button
+  document.querySelectorAll(".mode-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.mode === currentMode);
+  });
+
+  renderLegend();
+}
+
+// ─────────────────────────────────────────
+// Legend — different per mode
+// ─────────────────────────────────────────
+
+function renderLegend() {
+  if (currentMode === "simple") {
+    dom.legend.innerHTML = `
+      <span><i class="dot gym"></i> Gym Day</span>
+      <span><i class="dot rest"></i> Rest Day (Saturday auto)</span>
+    `;
+  } else {
+    dom.legend.innerHTML = `
+      <span><i class="dot push"></i> Push</span>
+      <span><i class="dot pull"></i> Pull</span>
+      <span><i class="dot legs"></i> Legs</span>
+      <span><i class="dot Abs"></i> Abs</span>
+      <span><i class="dot full"></i> Full Body</span>
+      <span><i class="dot rest"></i> Rest</span>
+    `;
   }
 }
 
@@ -107,7 +159,7 @@ function resetApp() {
 }
 
 // ─────────────────────────────────────────
-// Load data from Gist
+// Load data
 // ─────────────────────────────────────────
 
 async function loadData() {
@@ -199,7 +251,6 @@ async function saveWorkout() {
     if (res.status === 204) {
       setMsg("✅ Saved! Updating in ~25 seconds...", "ok");
 
-      // Optimistic update
       sessions[today] = {
         went:     workout !== "Rest",
         workout:  workout,
@@ -251,9 +302,7 @@ function renderCalendar() {
 
   const weekdays = ["S", "M", "T", "W", "T", "F", "S"];
 
-  // Build list of months from THIS month to December 2027
   const monthsToShow = [];
-
   let year  = currentYear;
   let month = currentMonth;
 
@@ -266,22 +315,18 @@ function renderCalendar() {
     }
   }
 
-  // Render each month block
   monthsToShow.forEach(({ year, month }) => {
     const monthBlock = document.createElement("div");
     monthBlock.className = "month-block";
 
-    // Month title
     const title = document.createElement("div");
     title.className = "month-title";
     title.textContent = `${monthNames[month]} ${year}`;
     monthBlock.appendChild(title);
 
-    // Grid container
     const grid = document.createElement("div");
     grid.className = "month-grid";
 
-    // Weekday headers
     weekdays.forEach((wd) => {
       const wdEl = document.createElement("div");
       wdEl.className = "weekday";
@@ -293,14 +338,12 @@ function renderCalendar() {
     const firstWeekday = firstDay.getDay();
     const daysInMonth  = new Date(year, month + 1, 0).getDate();
 
-    // Empty cells before first day
     for (let i = 0; i < firstWeekday; i++) {
       const empty = document.createElement("div");
       empty.className = "day empty";
       grid.appendChild(empty);
     }
 
-    // Day cells
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(year, month, d);
       date.setHours(0, 0, 0, 0);
@@ -314,20 +357,17 @@ function renderCalendar() {
       dayEl.className = "day";
       dayEl.textContent = d;
 
-      // Apply workout color if session exists
       const session = sessions[dateStr];
       if (session && session.workout) {
         const cls = WORKOUT_CLASS[session.workout];
         if (cls) dayEl.classList.add(cls);
       } else if (isSaturday && !isFuture) {
-        // Auto rest color on Saturdays (past ones)
         dayEl.classList.add("rest");
       }
 
       if (isFuture) dayEl.classList.add("future");
       if (isToday)  dayEl.classList.add("today");
 
-      // Tooltip
       if (session) {
         dayEl.title = `${dateStr} — ${session.workout}${
           session.duration ? " (" + session.duration + "min)" : ""

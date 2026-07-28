@@ -226,7 +226,7 @@ function createSessionFile(sessionData) {
     Push: "🏋️",
     Pull: "💪",
     Legs: "🦵",
-    Cardio: "🏃",
+    Abs: "🏃",
     Full: "⚡",
     Rest: "😴",
   };

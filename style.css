@@ -12,7 +12,7 @@ body {
   padding: 2rem 1rem;
 }
 
-/* Setup */
+/* ── Setup ── */
 .setup {
   max-width: 350px;
   margin: 4rem auto;
@@ -35,7 +35,7 @@ body {
   text-align: center;
 }
 
-/* App */
+/* ── App ── */
 .app {
   max-width: 800px;
   margin: 0 auto;
@@ -67,7 +67,7 @@ h1 { font-size: 1.5rem; }
   color: #eee;
 }
 
-/* Stats */
+/* ── Stats ── */
 .stats {
   display: flex;
   justify-content: center;
@@ -84,7 +84,7 @@ h1 { font-size: 1.5rem; }
 .stat-num {
   font-size: 2.5rem;
   font-weight: 800;
-  color: #22c55e;
+  color: #3b82f6;
 }
 
 .stat span:last-child {
@@ -92,7 +92,7 @@ h1 { font-size: 1.5rem; }
   color: #888;
 }
 
-/* Log Section */
+/* ── Log Section ── */
 .log-section {
   display: flex;
   flex-direction: column;
@@ -118,14 +118,14 @@ button {
   padding: 0.7rem;
   border: none;
   border-radius: 6px;
-  background: #22c55e;
-  color: #000;
+  background: #3b82f6;
+  color: #fff;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
 }
 
-button:hover { background: #16a34a; }
+button:hover { background: #2563eb; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .msg {
@@ -134,11 +134,47 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   min-height: 1.2rem;
 }
 
-.msg.ok   { color: #22c55e; }
+.msg.ok   { color: #3b82f6; }
 .msg.err  { color: #ef4444; }
 .msg.wait { color: #eab308; }
 
-/* Legend */
+/* ── Mode Toggle ── */
+.mode-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.4rem;
+  background: #171722;
+  border: 1px solid #22223a;
+  border-radius: 8px;
+  max-width: 300px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.mode-btn {
+  flex: 1;
+  background: transparent;
+  color: #888;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.mode-btn:hover {
+  background: #1a1a2a;
+  color: #eee;
+}
+
+.mode-btn.active {
+  background: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Legend ── */
 .legend {
   display: flex;
   justify-content: center;
@@ -161,14 +197,16 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   display: inline-block;
 }
 
+/* Detailed mode colors */
 .dot.push   { background: #ef4444; }
 .dot.pull   { background: #3b82f6; }
 .dot.legs   { background: #f97316; }
-.dot.cardio { background: #eab308; }
+.dot.Abs { background: #eab308; }
 .dot.full   { background: #a855f7; }
+.dot.gym    { background: #3b82f6; }
 .dot.rest   { background: #6b7280; }
 
-/* Calendar */
+/* ── Calendar ── */
 .calendar-section {
   display: flex;
   flex-direction: column;
@@ -219,28 +257,72 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .day.empty { background: transparent; }
 
-/* Workout Colors */
-.day.push   { background: #ef4444; color: #fff; font-weight: 600; }
-.day.pull   { background: #3b82f6; color: #fff; font-weight: 600; }
-.day.legs   { background: #f97316; color: #fff; font-weight: 600; }
-.day.cardio { background: #eab308; color: #000; font-weight: 600; }
-.day.full   { background: #a855f7; color: #fff; font-weight: 600; }
-.day.rest   { background: #6b7280; color: #fff; font-weight: 600; opacity: 0.7; }
+/* ── Simple Mode — everything blue ── */
+body.mode-simple .day.push,
+body.mode-simple .day.pull,
+body.mode-simple .day.legs,
+body.mode-simple .day.Abs,
+body.mode-simple .day.full {
+  background: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+}
 
-/* Today */
+/* ── Detailed Mode — different colors ── */
+body.mode-detailed .day.push {
+  background: #ef4444;
+  color: #fff;
+  font-weight: 600;
+}
+
+body.mode-detailed .day.pull {
+  background: #3b82f6;
+  color: #fff;
+  font-weight: 600;
+}
+
+body.mode-detailed .day.legs {
+  background: #f97316;
+  color: #fff;
+  font-weight: 600;
+}
+
+body.mode-detailed .day.Abs {
+  background: #eab308;
+  color: #000;
+  font-weight: 600;
+}
+
+body.mode-detailed .day.full {
+  background: #a855f7;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Rest day — same in both modes */
+.day.rest {
+  background: #6b7280;
+  color: #fff;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+/* Today marker */
 .day.today {
   border: 2px solid #fff;
 }
 
+/* Future days */
 .day.future {
   color: #333;
 }
 
-/* Responsive */
+/* ── Responsive ── */
 @media (max-width: 500px) {
   body { padding: 1rem 0.5rem; }
   .stats { gap: 2rem; }
   .stat-num { font-size: 2rem; }
   .month-title { font-size: 0.9rem; }
   .day { font-size: 0.6rem; }
+  .mode-toggle { max-width: 100%; }
 }
