@@ -1,35 +1,35 @@
-# 💪 GymStreak Tracker
+# GymStreak Tracker
 
 > Automatically tracking my gym progress, one commit at a time.
 
-## 📊 Live Stats
+## Live Stats
 
 | Metric | Value |
 |--------|-------|
-| 🔥 Current Streak | **10 days** |
-| 🏆 Longest Streak | **10 days** |
-| 📅 Total Sessions | **9 sessions** |
-| ⏱️ Total Time | **12 hours** |
-| 🕐 Last Updated | Tuesday, July 28, 2026 |
+| Current Streak | **10 days** |
+| Longest Streak | **10 days** |
+| Total Sessions | **9 sessions** |
+| Total Time | **12 hours** |
+| Last Updated | Tuesday, July 28, 2026 |
 
-## 📁 How This Works
+## How This Works
 
 Every time I log a gym session on my tracker:
 
-1. Session data saves to a private GitHub Gist
-2. A markdown file gets created in this repo
-3. Stats in this README update automatically
-4. A meaningful commit appears on my profile
+1. Session data saves to a private GitHub Gist.
+2. A markdown file gets created in this repo.
+3. Stats in this README update automatically.
+4. A meaningful commit appears on my profile.
 
-## 🗂️ Session Files
+## Session Files
 
 ```
 gym-sessions/
 └── 2026/
-    ├── January/
-    │   └── 2026-01-15.md
-    └── July/
-        └── 2026-07-23.md
+    ├── July/
+    │   └── 2026-07-26.md
+    └── August/
+        └── 2026-08-03.md
 ```
 
 ---
