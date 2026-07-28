@@ -128,7 +128,7 @@ async function writeGistData(gymData) {
     }
   );
 
-  console.log("✅ Gist updated");
+  console.log("Gist updated");
 }
 
 // ─────────────────────────────────────────────
@@ -223,12 +223,12 @@ function createSessionFile(sessionData) {
   const weekday = dateObj.toLocaleString("en-US", { weekday: "long" });
 
   const workoutEmoji = {
-    Push: "🏋️",
-    Pull: "💪",
-    Legs: "🦵",
-    Abs: "🏃",
-    Full: "⚡",
-    Rest: "😴",
+    Push: "",
+    Pull: "",
+    Legs: "",
+    Abs: "",
+    Full: "",
+    Rest: "",
   };
 
   const emoji = workoutEmoji[workout] || "💪";
@@ -263,7 +263,7 @@ ${notes || "No notes logged."}
   const filePath = path.join(folderPath, `${date}.md`);
   fs.writeFileSync(filePath, content, "utf8");
 
-  console.log(`✅ Session file created: ${filePath}`);
+  console.log(`Session file created: ${filePath}`);
 }
 
 // ─────────────────────────────────────────────
@@ -320,7 +320,7 @@ gym-sessions/
 `;
 
   fs.writeFileSync("README.md", content, "utf8");
-  console.log("✅ README updated");
+  console.log("README updated");
 }
 
 // ─────────────────────────────────────────────
@@ -329,9 +329,9 @@ gym-sessions/
 
 async function main() {
   console.log("─────────────────────────────────");
-  console.log(`💪 Processing workout: ${WORKOUT_TYPE}`);
-  console.log(`📅 Date: ${WORKOUT_DATE}`);
-  console.log(`⏱️ Duration: ${WORKOUT_DURATION} minutes`);
+  console.log(`Processing workout: ${WORKOUT_TYPE}`);
+  console.log(`Date: ${WORKOUT_DATE}`);
+  console.log(`Duration: ${WORKOUT_DURATION} minutes`);
   console.log("─────────────────────────────────");
 
   const gymData = await readGistData();
@@ -365,10 +365,10 @@ async function main() {
   updateReadme(gymData.stats);
 
   console.log("─────────────────────────────────");
-  console.log("✅ All done!");
-  console.log(`🔥 Current streak: ${gymData.stats.currentStreak} days`);
-  console.log(`🏆 Longest streak: ${gymData.stats.longestStreak} days`);
-  console.log(`📅 Total sessions: ${gymData.stats.totalSessions}`);
+  console.log("All done!");
+  console.log(`Current streak: ${gymData.stats.currentStreak} days`);
+  console.log(`Longest streak: ${gymData.stats.longestStreak} days`);
+  console.log(`Total sessions: ${gymData.stats.totalSessions}`);
   console.log("─────────────────────────────────");
 }
 
