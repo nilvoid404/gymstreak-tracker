@@ -249,7 +249,7 @@ async function saveWorkout() {
     );
 
     if (res.status === 204) {
-      setMsg("✅ Saved! Updating in ~25 seconds...", "ok");
+     
 
       sessions[today] = {
         went:     workout !== "Rest",
