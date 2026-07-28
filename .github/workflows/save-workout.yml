@@ -12,29 +12,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1 — Verify password
       - name: Verify password
         run: |
           if [ "${{ github.event.client_payload.password }}" != "${{ secrets.APP_PASSWORD }}" ]; then
-            echo "Wrong password — rejecting request"
+            echo "Wrong password - rejecting request"
             exit 1
           fi
           echo "Password Verified!"
 
-      # Step 2 — Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_TOKEN }}
           persist-credentials: false
 
-      # Step 3 — Setup Node
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      # Step 4 — Save workout data
       - name: Save workout
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -43,11 +39,9 @@ jobs:
           WORKOUT_DATE: ${{ github.event.client_payload.date }}
           WORKOUT_TYPE: ${{ github.event.client_payload.workout }}
           WORKOUT_DURATION: ${{ github.event.client_payload.duration }}
-          WORKOUT_INTENSITY: ${{ github.event.client_payload.intensity }}
           WORKOUT_NOTES: ${{ github.event.client_payload.notes }}
         run: node .github/scripts/save-workout.js
 
-      # Step 5 — Commit to repo using GH_TOKEN explicitly
       - name: Commit session to repo
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -60,20 +54,13 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
-            EMOJI="💪"
             TYPE="${{ github.event.client_payload.workout }}"
+            DURATION="${{ github.event.client_payload.duration }}"
+            DATE="${{ github.event.client_payload.date }}"
 
-            if [ "$TYPE" = "Push" ]; then EMOJI="🏋️"; fi
-            if [ "$TYPE" = "Pull" ]; then EMOJI="💪"; fi
-            if [ "$TYPE" = "Legs" ]; then EMOJI="🦵"; fi
-            if [ "$TYPE" = "Abs" ]; then EMOJI="🏃"; fi
-            if [ "$TYPE" = "Full" ]; then EMOJI="⚡"; fi
-            if [ "$TYPE" = "Rest" ]; then EMOJI="😴"; fi
+            git commit -m "$DURATION min $TYPE day - $DATE"
 
-            git commit -m "$EMOJI Gym session — $TYPE — ${{ github.event.client_payload.duration }}min — ${{ github.event.client_payload.date }}"
-
-            # Push using GH_TOKEN with authenticated URL
             git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
 
-            echo "✅ Committed to repo"
+            echo "Committed to repo"
           fi

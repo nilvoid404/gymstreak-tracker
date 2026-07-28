@@ -107,7 +107,7 @@ function renderLegend() {
   if (currentMode === "simple") {
     dom.legend.innerHTML = `
       <span><i class="dot gym"></i> Gym Day</span>
-      <span><i class="dot rest"></i> Rest Day (Saturday auto)</span>
+      <span><i class="dot rest"></i> Rest Day</span>
     `;
   } else {
     dom.legend.innerHTML = `
@@ -239,8 +239,7 @@ async function saveWorkout() {
           client_payload: {
             date:      today,
             workout:   workout,
-            duration:  dom.duration.value || "0",
-            intensity: "7",
+            duration:  dom.duration.value || "0",            
             notes:     "",
             password:  password,
           },

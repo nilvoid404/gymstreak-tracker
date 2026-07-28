@@ -31,7 +31,6 @@ jobs:
           GH_USERNAME: ${{ secrets.GH_USERNAME }}
           WORKOUT_TYPE: "Rest"
           WORKOUT_DURATION: "0"
-          WORKOUT_INTENSITY: "0"
           WORKOUT_NOTES: "Auto-logged Saturday rest day"
         run: |
           export WORKOUT_DATE=$(TZ='Asia/Kathmandu' date +%Y-%m-%d)
@@ -51,8 +50,7 @@ jobs:
             echo "No changes"
           else
             NEPAL_DATE=$(TZ='Asia/Kathmandu' date +%Y-%m-%d)
-            git commit -m "😴 Rest day — $NEPAL_DATE"
+            git commit -m "Rest day - $NEPAL_DATE"
 
-            # Push using GH_TOKEN with authenticated URL
             git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
           fi

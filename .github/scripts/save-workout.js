@@ -1,8 +1,7 @@
 // ─────────────────────────────────────────────
 // save-workout.js
 // Runs inside GitHub Actions
-// Has access to all secrets via environment
-// variables — safe, never exposed to browser
+// Clean version — no emojis, no intensity
 // ─────────────────────────────────────────────
 
 const https = require("https");
@@ -17,7 +16,6 @@ const {
   WORKOUT_DATE,
   WORKOUT_TYPE,
   WORKOUT_DURATION,
-  WORKOUT_INTENSITY,
   WORKOUT_NOTES,
 } = process.env;
 
@@ -76,7 +74,7 @@ function githubHeaders(extraHeaders = {}) {
 // ─────────────────────────────────────────────
 
 async function readGistData() {
-  console.log("📖 Reading gym data from Gist...");
+  console.log("Reading gym data from Gist...");
 
   const data = await request({
     hostname: "api.github.com",
@@ -88,7 +86,7 @@ async function readGistData() {
   const gymFile = data.files["gym-data.json"];
 
   if (!gymFile || !gymFile.content) {
-    console.log("No existing data — starting fresh");
+    console.log("No existing data - starting fresh");
     return {
       sessions: {},
       stats: {
@@ -109,7 +107,7 @@ async function readGistData() {
 // ─────────────────────────────────────────────
 
 async function writeGistData(gymData) {
-  console.log("💾 Saving gym data to Gist...");
+  console.log("Saving gym data to Gist...");
 
   await request(
     {
@@ -119,7 +117,7 @@ async function writeGistData(gymData) {
       headers: githubHeaders(),
     },
     {
-      description: `GymStreak Data — Updated ${new Date().toISOString()}`,
+      description: `GymStreak Data - Updated ${new Date().toISOString()}`,
       files: {
         "gym-data.json": {
           content: JSON.stringify(gymData, null, 2),
@@ -136,10 +134,8 @@ async function writeGistData(gymData) {
 // ─────────────────────────────────────────────
 
 function calculateStats(sessions) {
-  // Count any logged day (gym or rest) for streak
   const allDates = Object.keys(sessions).sort();
 
-  // Only count gym days for totalSessions
   const gymDates = Object.keys(sessions)
     .filter((date) => sessions[date].went === true)
     .sort();
@@ -160,7 +156,6 @@ function calculateStats(sessions) {
   }, 0);
 
   // Current streak — count backwards from today
-  // Both gym days AND rest days keep the streak alive
   let currentStreak = 0;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -210,11 +205,11 @@ function calculateStats(sessions) {
 }
 
 // ─────────────────────────────────────────────
-// Create session file
+// Create session markdown file
 // ─────────────────────────────────────────────
 
 function createSessionFile(sessionData) {
-  const { date, workout, duration, intensity, notes } = sessionData;
+  const { date, workout, duration, notes } = sessionData;
 
   const dateObj = new Date(date + "T00:00:00");
   const year = dateObj.getFullYear();
@@ -222,31 +217,15 @@ function createSessionFile(sessionData) {
   const day = dateObj.getDate();
   const weekday = dateObj.toLocaleString("en-US", { weekday: "long" });
 
-  const workoutEmoji = {
-    Push: "",
-    Pull: "",
-    Legs: "",
-    Abs: "",
-    Full: "",
-    Rest: "",
-  };
-
-  const emoji = workoutEmoji[workout] || "💪";
-
-  const filled = "█".repeat(parseInt(intensity) || 0);
-  const empty = "░".repeat(10 - (parseInt(intensity) || 0));
-  const intensityBar = filled + empty;
-
-  const content = `# ${emoji} ${workout} Day — ${month} ${day}, ${year}
+  const content = `# ${workout} Day - ${month} ${day}, ${year}
 
 ## Session Info
 
-| | |
-|---|---|
-| 📅 Date | ${weekday}, ${month} ${day}, ${year} |
-| 💪 Workout | ${workout} |
-| ⏱️ Duration | ${duration} minutes |
-| 🔥 Intensity | ${intensityBar} ${intensity}/10 |
+| Field | Value |
+|-------|-------|
+| Date | ${weekday}, ${month} ${day}, ${year} |
+| Workout | ${workout} |
+| Duration | ${duration} minutes |
 
 ## Notes
 
@@ -280,38 +259,38 @@ function updateReadme(stats) {
 
   const totalHours = Math.round(stats.totalMinutes / 60);
 
-  const content = `# 💪 GymStreak Tracker
+  const content = `# GymStreak Tracker
 
 > Automatically tracking my gym progress, one commit at a time.
 
-## 📊 Live Stats
+## Live Stats
 
 | Metric | Value |
 |--------|-------|
-| 🔥 Current Streak | **${stats.currentStreak} days** |
-| 🏆 Longest Streak | **${stats.longestStreak} days** |
-| 📅 Total Sessions | **${stats.totalSessions} sessions** |
-| ⏱️ Total Time | **${totalHours} hours** |
-| 🕐 Last Updated | ${now} |
+| Current Streak | **${stats.currentStreak} days** |
+| Longest Streak | **${stats.longestStreak} days** |
+| Total Sessions | **${stats.totalSessions} sessions** |
+| Total Time | **${totalHours} hours** |
+| Last Updated | ${now} |
 
-## 📁 How This Works
+## How This Works
 
 Every time I log a gym session on my tracker:
 
-1. Session data saves to a private GitHub Gist
-2. A markdown file gets created in this repo
-3. Stats in this README update automatically
-4. A meaningful commit appears on my profile
+1. Session data saves to a private GitHub Gist.
+2. A markdown file gets created in this repo.
+3. Stats in this README update automatically.
+4. A meaningful commit appears on my profile.
 
-## 🗂️ Session Files
+## Session Files
 
 \`\`\`
 gym-sessions/
 └── 2026/
-    ├── January/
-    │   └── 2026-01-15.md
-    └── July/
-        └── 2026-07-23.md
+    ├── July/
+    │   └── 2026-07-26.md
+    └── August/
+        └── 2026-08-03.md
 \`\`\`
 
 ---
@@ -344,7 +323,6 @@ async function main() {
     went: WORKOUT_TYPE !== "Rest",
     workout: WORKOUT_TYPE,
     duration: parseInt(WORKOUT_DURATION) || 0,
-    intensity: parseInt(WORKOUT_INTENSITY) || 5,
     notes: WORKOUT_NOTES || "",
     loggedAt: new Date().toISOString(),
   };
@@ -358,7 +336,6 @@ async function main() {
     date: WORKOUT_DATE,
     workout: WORKOUT_TYPE,
     duration: WORKOUT_DURATION,
-    intensity: WORKOUT_INTENSITY,
     notes: WORKOUT_NOTES,
   });
 
