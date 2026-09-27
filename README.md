@@ -8,8 +8,8 @@
 |--------|-------|
 | Current Streak | **71 days** |
 | Longest Streak | **71 days** |
-| Total Sessions | **55 sessions** |
-| Total Time | **77 hours** |
+| Total Sessions | **54 sessions** |
+| Total Time | **75 hours** |
 | Last Updated | Sunday, September 27, 2026 |
 
 ## How This Works
