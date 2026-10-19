@@ -6,11 +6,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Current Streak | **2 days** |
+| Current Streak | **3 days** |
 | Longest Streak | **89 days** |
 | Total Sessions | **64 sessions** |
 | Total Time | **90 hours** |
-| Last Updated | Sunday, October 18, 2026 |
+| Last Updated | Monday, October 19, 2026 |
 
 ## How This Works
 
